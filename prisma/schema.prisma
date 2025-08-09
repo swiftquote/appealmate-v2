@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled (Vercel runtime)
+  directUrl = env("DIRECT_URL")   // direct (for migrations)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  planType      String    @default("none") // none, single_use, subscriber
+  planExpiry    DateTime?
+  appealsUsed   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  appeals       Appeal[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model Appeal {
+  id                   String   @id @default(cuid())
+  userId               String
+  issuerType           String   // council, private
+  councilOrCompany     String
+  pcnNumber            String
+  vrm                  String
+  vehicleMake          String?
+  vehicleModel         String?
+  vehicleColour        String?
+  contraventionCode    String
+  contraventionText    String
+  issueDateTime        DateTime
+  location             String
+  observationStart     DateTime?
+  observationEnd       DateTime?
+  ceoNotes             String?
+
+  // User confirmed details
+  confirmedVrm         String
+  confirmedLocation    String
+  confirmedDateTime    DateTime
+  confirmedContravention String
+
+  // Payment and permit info
+  paid                 Boolean  @default(false)
+  paidUntil            DateTime?
+  paymentMethod        String?  // RingGo, PayByPhone, JustPark, Machine, Other
+  permitType           String?  // Resident, Business, Visitor, BlueBadge, Other
+
+  // Exemptions
+  loadingUnloading     Boolean  @default(false)
+  passengerDropoff     Boolean  @default(false)
+  blueBadge            Boolean  @default(false)
+  medicalEmergency     Boolean  @default(false)
+
+  // Signage and procedural
+  signageVisible       Boolean  @default(true)
+  markingsVisible      Boolean  @default(true)
+  noObservationPeriod  Boolean  @default(false)
+  lateCouncilReply     Boolean  @default(false)
+
+  // AI generated content
+  primaryDefence       String?
+  supportingDefences   String? // JSON array
+  letterText           String?
+
+  status               String   @default("draft") // draft, paid, completed
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evidence             Evidence[]
+
+  @@map("appeals")
+}
+
+model Evidence {
+  id         String   @id @default(cuid())
+  appealId   String
+  type       String   // ticket, receipt, signage, medical, delivery, other
+  fileUrl    String
+  fileName   String
+  fileSize   Int
+  mimeType   String
+  createdAt  DateTime @default(now())
+
+  appeal     Appeal   @relation(fields: [appealId], references: [id], onDelete: Cascade)
+
+  @@map("evidence")
+}
+
+model Payment {
+  id              String    @id @default(cuid())
+  userId          String
+  stripePaymentId String?
+  amount          Float
+  currency        String    @default("gbp")
+  type            String    // single_use, subscription
+  status          String    // pending, completed, failed, refunded
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model ContraventionRule {
+  id                  String   @id @default(cuid())
+  code                String   @unique
+  description         String
+  category            String   // paid_parking, permit, restricted_area, etc.
+  gracePeriodEligible Boolean  @default(false)
+  typicalExemptions   String?  // JSON array
+  observationRequired Boolean  @default(false)
+  commonDefences      String?  // JSON array
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("contravention_rules")
+}
