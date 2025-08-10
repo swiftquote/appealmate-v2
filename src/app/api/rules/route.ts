@@ -66,7 +66,7 @@ const contraventionRules: Record<string, {
   "91": { category: "police_bay", gracePeriodEligible: false, observationRequired: true, commonDefences: ["emergency_vehicle", "police_business", "signage"] },
   "93": { category: "vehicle_restriction", gracePeriodEligible: false, observationRequired: true, commonDefences: ["vehicle_type", "signage", "emergency"] },
   "95": { category: "clearway", gracePeriodEligible: false, observationRequired: true, commonDefences: ["emergency", "breakdown", "signage"] },
-  "96": { category: "cycle_track", gracePeriodEligible: false, observationRequired: true, commonDefences = ["emergency", "signage", "track_marking"] },
+  "96": { category: "cycle_track", gracePeriodEligible: false, observationRequired: true, commonDefences: ["emergency", "signage", "track_marking"] },
   "97": { category: "red_route", gracePeriodEligible: false, observationRequired: true, commonDefences: ["loading", "emergency", "signage"] },
   "99": { category: "specific_vehicle", gracePeriodEligible: false, observationRequired: true, commonDefences: ["vehicle_type", "permit", "signage"] }
 }
